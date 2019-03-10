@@ -5,6 +5,9 @@ class XmlDataGenerator:
     def __init__(self, data_file_path):
         self.data_file_path = data_file_path
 
+    def __iter__(self):
+        return self.get_generator()
+
     def get_generator(self):
         events = ET.iterparse(self.data_file_path, events=("start", "end",))
 

@@ -1,10 +1,11 @@
 import xml.etree.ElementTree
 import random
 
+
 class DataSplitter:
-    def __init__(self, data_file_path, train_percentage):
+    def __init__(self, data_file_path: str, train_percentage):
         self.data_file_path = data_file_path
-        self.train_percentage = train_percentage
+        self.train_percentage = float(train_percentage)
 
     def split_data(self, train_dest_path, test_dest_path):
         with open(self.data_file_path, 'rb') as xml_file:
@@ -37,7 +38,7 @@ class DataSplitter:
         for i in range(length):
             r = random.random()
 
-            if (r < self.train_percentage):
+            if r < self.train_percentage:
                 result["test"].append(i)
             else:
                 result["train"].append(i)
