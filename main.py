@@ -2,9 +2,11 @@ import os
 import json
 import fire
 import logging
+import numpy as np
 
-from src.preprocessors.xml_data_generator import XmlDataGenerator
-from src.preprocessors.data_splitter import DataSplitter
+from src.preprocessors import DataSplitter
+from src.generators import XmlDataGenerator
+from src.extractors import FeatureExtractor
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
@@ -15,17 +17,16 @@ class PkddLearning:
     Unsupervised SQL injection detection
     """
 
-    def generate_data(self,
+    def extract_features(self,
+                      cache_path: str = './features.dat',
                       data_train_path: str = './dataset/data_train.xml',
                       data_test_path: str = './dataset/data_test.xml'):
         data_train_path = os.path.abspath(data_train_path)
         data_test_path = os.path.abspath(data_test_path)
         train_generator = XmlDataGenerator(data_train_path)
         test_generator = XmlDataGenerator(data_test_path)
-        train_samples = iter(train_generator)
-        test_samples = iter(test_generator)
-        print(next(train_samples))
-        print(next(train_samples))
+        features, labels = FeatureExtractor().extract(train_generator)
+        np.savez(cache_path, np.array(features), np.array(labels))
 
     """
     Splits learning dataset into test and train datasets
