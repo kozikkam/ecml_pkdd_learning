@@ -1,13 +1,17 @@
 import numpy as np
+import pandas as pd
 from sklearn import metrics
 from src.algorithms import KMeansAlgorithm
 
+STATISTICS_COLUMNS = ['ALGORITHM', 'TP', 'TN', 'FP', 'FN', 'PRECISION', 'RECALL', 'ADJUSTED_RAND_SCORE',
+                      'HOMOGENEITY_SCORE', 'COMPLETENESS_SCORE', 'V_MEASURE_SCORE', 'FOWLKES_MALLOWS_SCORE']
 
 class DataAnalyzer:
     def __init__(self):
         self.features = None
         self.labels = None
         self.algorithms_results = []
+        self.algorithms_statistics = pd.DataFrame(columns=STATISTICS_COLUMNS)
 
     def read_data(self, file_path="../../features-train.dat.npz"):
         data = np.load(file_path)
@@ -22,28 +26,26 @@ class DataAnalyzer:
 
     def add_algorithm_result(self, algorithm_name, predicted_results):
         self.algorithms_results.append((algorithm_name, predicted_results))
+        algorithm_statistics = self.get_algorithm_statistics(algorithm_name, self.labels, predicted_results)
+        self.algorithms_statistics = self.algorithms_statistics.append(pd.DataFrame([algorithm_statistics],
+                                                                       columns=STATISTICS_COLUMNS),
+                                                                       ignore_index=True)
+
+    def get_algorithm_statistics(self, name, labels, predicted_labels):
+        tn, fp, fn, tp = metrics.confusion_matrix(labels, predicted_labels, labels=[0, 1]).ravel()
+        precision = tp/(tp + fp)
+        recall = tp/(tp + fn)
+        adjusted_rand_score = metrics.adjusted_rand_score(labels, predicted_labels)
+        homogeneity_score = metrics.homogeneity_score(labels, predicted_labels)
+        completeness_score = metrics.completeness_score(labels, predicted_labels)
+        v_measure_score = metrics.v_measure_score(labels, predicted_labels)
+        fowlkes_mallows_score = metrics.fowlkes_mallows_score(labels, predicted_labels)
+        return [name, tp, tn, fp, fn, precision, recall, adjusted_rand_score, homogeneity_score,
+                completeness_score, v_measure_score, fowlkes_mallows_score]
 
     def show_statistics(self):
-        labels = self.get_labels()
-        if len(self.algorithms_results) > 0:
-            print("Algorithms results statistics: ")
-            for result in self.algorithms_results:
-                algorithm_name = result[0]
-                predicted_labels = result[1]
-                print("--- ", algorithm_name, " ---")
-                print("Confusion matrix:")
-                tn, fp, fn, tp = metrics.confusion_matrix(labels, predicted_labels, labels=[0, 1]).ravel()
-                print("TN:", tn, "FP:", fp)
-                print("FN:", fn, "TP:", tp)
-                print("Precision:", tp/(tp + fp))
-                print("Recall:", tp/(tp + fn))
-                print("Adjusted rand score:", metrics.adjusted_rand_score(labels, predicted_labels))
-                print("Homogenity score:", metrics.homogeneity_score(labels, predicted_labels))
-                print("Completeness score:", metrics.completeness_score(labels, predicted_labels))
-                print("V measure score:", metrics.v_measure_score(labels, predicted_labels))
-                print("Fowlkes mallows score:", metrics.fowlkes_mallows_score(labels, predicted_labels))
-        else:
-            print("No data results to analyse")
+        statistics_to_show = self.algorithms_statistics.set_index('ALGORITHM')
+        print(statistics_to_show.to_string())
 
     def compare_algorithms(self):
         return
@@ -55,7 +57,7 @@ class DataAnalyzer:
 dataAnalyzer = DataAnalyzer()
 dataAnalyzer.read_data()
 
-kMeans = KMeansAlgorithm(2, dataAnalyzer.features)
+kMeans = KMeansAlgorithm(2, dataAnalyzer.get_features())
 kMeansPredictedValues = kMeans.get_predicted_labels()
 
 dataAnalyzer.add_algorithm_result("K-means", kMeansPredictedValues)
