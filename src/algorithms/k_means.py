@@ -4,24 +4,15 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 class KMeansAlgorithm:
-    def __init__(self, k):
+    def __init__(self, k, features):
         self.k = k
-        self.features = None
-        self.labels = None
-
-    def read_data(self, file_path="../../features-train.dat.npz"):
-        data = np.load(file_path)
-        self.features = data.f.arr_0
-        self.labels = data.f.arr_1
+        self.features = features
 
     def k_means(self, features):
         return KMeans(self.k).fit(features)
 
-    def get_features(self):
-        return self.features
-
-    def get_labels(self):
-        return self.labels
+    def get_predicted_labels(self):
+        return self.k_means(self.features).labels_
 
     def get_reduced_nr_of_dimensions(self, final_dimensions):
         pca = PCA(n_components=final_dimensions)
@@ -48,9 +39,4 @@ class KMeansAlgorithm:
         ax.legend(["No attack", "Attack"])
         ax.grid()
         plt.show()
-
-
-km = KMeansAlgorithm(2)
-km.read_data()
-km.plot_2D_figure()
 
