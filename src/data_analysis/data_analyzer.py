@@ -4,6 +4,7 @@ from sklearn import metrics
 from src.preprocessors import PFA
 from src.algorithms import KMeansAlgorithm
 from src.algorithms import GaussianMixtureModel
+from src.algorithms import CustomAlgorithm
 
 STATISTICS_COLUMNS = ['ALGORITHM','PARAMS', 'TP', 'TN', 'FP', 'FN', 'PRECISION', 'RECALL', 'ADJUSTED_RAND_SCORE',
                       'HOMOGENEITY_SCORE', 'COMPLETENESS_SCORE', 'V_MEASURE_SCORE', 'FOWLKES_MALLOWS_SCORE']
@@ -63,23 +64,24 @@ class DataAnalyzer:
 
 dataAnalyzer = DataAnalyzer()
 dataAnalyzer.read_data()
+n_custers = 2
 
-kMeans = KMeansAlgorithm(2, dataAnalyzer.get_features())
-kMeansPredictedValues = kMeans.get_predicted_labels()
-dataAnalyzer.add_algorithm_result("K-means", kMeansPredictedValues, "algorithm=full")
-kMeans = KMeansAlgorithm(2, dataAnalyzer.get_features(), "elkan")
-kMeansPredictedValues = kMeans.get_predicted_labels()
-dataAnalyzer.add_algorithm_result("K-means", kMeansPredictedValues, "algorithm=elkan")
 
-gmm = GaussianMixtureModel(2, dataAnalyzer.get_features())
-gmmPredictedValues = gmm.get_predicted_labels()
-dataAnalyzer.add_algorithm_result("GMM", gmmPredictedValues, "covariance_type=full")
-gmm = GaussianMixtureModel(2, dataAnalyzer.get_features(), "tied")
-gmmPredictedValues = gmm.get_predicted_labels()
-dataAnalyzer.add_algorithm_result("GMM", gmmPredictedValues, "covariance_type=tied")
-gmm = GaussianMixtureModel(2, dataAnalyzer.get_features(), "spherical")
-gmmPredictedValues = gmm.get_predicted_labels()
-dataAnalyzer.add_algorithm_result("GMM", gmmPredictedValues, "covariance_type=spherical")
+for i in ["full", "elkan"]:
+    kMeans = KMeansAlgorithm(n_custers, dataAnalyzer.get_features(), i)
+    kMeansPredictedValues = kMeans.get_predicted_labels()
+    dataAnalyzer.add_algorithm_result("K-means", kMeansPredictedValues, "algorithm=" + i)
+
+
+for i in ["full", "tied", "spherical"]:
+    gmm = GaussianMixtureModel(n_custers, dataAnalyzer.get_features(), i)
+    gmmPredictedValues = gmm.get_predicted_labels()
+    dataAnalyzer.add_algorithm_result("GMM", gmmPredictedValues, "covariance_type=" + i)
+
+
+for i in np.arange(0.0, 1.0, 0.1):
+    customAlg = CustomAlgorithm(dataAnalyzer.get_features(), i)
+    customAlgPredictedValues = customAlg.get_predicted_labels()
+    dataAnalyzer.add_algorithm_result("CustomAlgorithm", customAlgPredictedValues, "alpha=" + str(i))
 
 dataAnalyzer.show_statistics()
-
