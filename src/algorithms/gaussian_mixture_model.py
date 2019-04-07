@@ -11,4 +11,3 @@ class GaussianMixtureModel:
 
     def get_predicted_labels(self):
         return self.gaussian_mixture_model(self.features).predict(self.features)
-

@@ -5,6 +5,9 @@ from src.preprocessors import PFA
 from src.algorithms import KMeansAlgorithm
 from src.algorithms import GaussianMixtureModel
 from src.algorithms import CustomAlgorithm
+import numpy as np
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
 
 STATISTICS_COLUMNS = ['ALGORITHM','PARAMS', 'TP', 'TN', 'FP', 'FN', 'PRECISION', 'RECALL', 'ADJUSTED_RAND_SCORE',
                       'HOMOGENEITY_SCORE', 'COMPLETENESS_SCORE', 'V_MEASURE_SCORE', 'FOWLKES_MALLOWS_SCORE']
@@ -61,6 +64,28 @@ class DataAnalyzer:
     def save_statistics(self):
         return
 
+    def get_reduced_nr_of_dimensions(self, final_dimensions):
+        pca = PCA(n_components=final_dimensions)
+        reduced_features = pca.fit_transform(self.features)
+        return reduced_features
+
+    def plot_2D_figure(self, predicted_labels, plot_name="SQL Injection Detection"):
+        features = self.get_reduced_nr_of_dimensions(2)
+        features_with_targets = np.concatenate((features, predicted_labels[:, None]), axis=1)
+        targets = [0, 1]
+        colors = ['g', 'r']
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(1, 1, 1)
+        ax.set_title(plot_name, fontsize=20)
+        for target, color in zip(targets, colors):
+            indices_to_keep = features_with_targets[:, 2] == target
+            ax.scatter(features_with_targets[indices_to_keep][:, 0]
+                       , features_with_targets[indices_to_keep][:, 1]
+                       , c=color
+                       , s=50)
+        ax.legend(["No attack", "Attack"])
+        ax.grid()
+        plt.show()
 
 dataAnalyzer = DataAnalyzer()
 dataAnalyzer.read_data()
@@ -72,11 +97,11 @@ for i in ["full", "elkan"]:
     kMeansPredictedValues = kMeans.get_predicted_labels()
     dataAnalyzer.add_algorithm_result("K-means", kMeansPredictedValues, "algorithm=" + i)
 
-
 for i in ["full", "tied", "spherical"]:
     gmm = GaussianMixtureModel(n_custers, dataAnalyzer.get_features(), i)
     gmmPredictedValues = gmm.get_predicted_labels()
     dataAnalyzer.add_algorithm_result("GMM", gmmPredictedValues, "covariance_type=" + i)
+    dataAnalyzer.plot_2D_figure(gmmPredictedValues, "GMM covariance_type=" + i)
 
 
 for i in np.arange(0.0, 1.0, 0.1):
