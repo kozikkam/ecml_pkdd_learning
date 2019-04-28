@@ -9,7 +9,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
-STATISTICS_COLUMNS = ['ALGORITHM','PARAMS', 'TP', 'TN', 'FP', 'FN', 'PRECISION', 'RECALL', 'ADJUSTED_RAND_SCORE',
+STATISTICS_COLUMNS = ['ALGORITHM','PARAMS', 'TP', 'TN', 'FP', 'FN', 'PRECISION', 'RECALL', 'F1_SCORE', 'ADJUSTED_RAND_SCORE',
                       'HOMOGENEITY_SCORE', 'COMPLETENESS_SCORE', 'V_MEASURE_SCORE', 'FOWLKES_MALLOWS_SCORE']
 
 class DataAnalyzer:
@@ -41,12 +41,13 @@ class DataAnalyzer:
         tn, fp, fn, tp = metrics.confusion_matrix(labels, predicted_labels, labels=[0, 1]).ravel()
         precision = tp/(tp + fp)
         recall = tp/(tp + fn)
+        f1_score = 2*(precision*recall)/(precision+recall)
         adjusted_rand_score = metrics.adjusted_rand_score(labels, predicted_labels)
         homogeneity_score = metrics.homogeneity_score(labels, predicted_labels)
         completeness_score = metrics.completeness_score(labels, predicted_labels)
         v_measure_score = metrics.v_measure_score(labels, predicted_labels)
         fowlkes_mallows_score = metrics.fowlkes_mallows_score(labels, predicted_labels)
-        return [name, params, tp, tn, fp, fn, precision, recall, adjusted_rand_score, homogeneity_score,
+        return [name, params, tp, tn, fp, fn, precision, recall, f1_score, adjusted_rand_score, homogeneity_score,
                 completeness_score, v_measure_score, fowlkes_mallows_score]
 
     def show_statistics(self):
@@ -62,7 +63,7 @@ class DataAnalyzer:
         return
 
     def save_statistics(self):
-        return
+        self.algorithms_statistics.to_csv("algorithm_statistics.csv", encoding='utf-8', index=False)
 
     def get_reduced_nr_of_dimensions(self, final_dimensions):
         pca = PCA(n_components=final_dimensions)
@@ -109,4 +110,8 @@ for i in np.arange(0.0, 1.0, 0.1):
     customAlgPredictedValues = customAlg.get_predicted_labels()
     dataAnalyzer.add_algorithm_result("CustomAlgorithm", customAlgPredictedValues, "alpha=" + str(i))
 
-dataAnalyzer.show_statistics()
+# dataAnalyzer.show_statistics()
+dataAnalyzer.save_statistics()
+print('done')
+#dataAnalyzer.plot_2D_figure(dataAnalyzer.labels, "Real labels")
+
